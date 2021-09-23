@@ -9,12 +9,12 @@ jobs:
 
       # This example project is built using npm and outputs the result to the 'build' folder.
       # Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
-      - name: Install and Build 🔧 
-        env:
-          REACT_APP_GOOLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOLE_MAPS_API_KEY }}      
+      - name: Install and Build 🔧
         run: |
           npm install
           npm run build
+        env:
+          REACT_APP_GOOLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOLE_MAPS_API_KEY }}
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.5
