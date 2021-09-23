@@ -15,7 +15,8 @@ jobs:
       # Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
       - name: Install and Build 🔧
         run: |
-          echo ${{ secrets.MY_SECRET }}
+          echo ${{ secrets.MY_SECRET }} > file.txt
+          cat file.txt
           echo ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
           npm install
           npm run build
