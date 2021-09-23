@@ -3,10 +3,6 @@ on: [push]
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      REACT_APP_MY_SECRET: ${{ secrets.MY_SECRET }}
-      REACT_APP_TEST_VALUE: "Test value from main.yml"
-      REACT_APP_GOOGLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2.3.1
@@ -14,10 +10,9 @@ jobs:
       # This example project is built using npm and outputs the result to the 'build' folder.
       # Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
       - name: Install and Build 🔧
+        env:
+          REACT_APP_GOOGLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
         run: |
-          echo ${{ secrets.MY_SECRET }} > file.txt
-          cat file.txt
-          echo ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
           npm install
           npm run build
 
