@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REACT_APP_TEST_VALUE: "Test value from main.yml"
-      REACT_APP_GOOGLE_MAPS_API_KEY: ${ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }
+      REACT_APP_GOOGLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2.3.1
@@ -14,6 +14,7 @@ jobs:
       # Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
       - name: Install and Build 🔧
         run: |
+          echo ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
           npm install
           npm run build
 
