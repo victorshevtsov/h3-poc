@@ -10,10 +10,12 @@ const center = {
   lng: -79.38
 };
 
+console.log(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
+
 function Map() {
   return (
     <LoadScript
-      googleMapsApiKey={process.env.REACT_APP_GOOLE_MAPS_API_KEY as string}
+      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string}
     >
       <GoogleMap
         mapContainerStyle={containerStyle}
