@@ -10,6 +10,7 @@ const center = {
   lng: -79.38
 };
 
+console.log(process.env.REACT_APP_TEST_VALUE);
 console.log(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 
 function Map() {
