@@ -1,47 +1,53 @@
-import { Polygon, GoogleMap, useLoadScript } from '@react-google-maps/api';
-import React, { useEffect, useState } from 'react';
+import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 import * as h3 from 'h3-js';
+import React, { useEffect, useState } from 'react';
+import { hexagon } from '../models/hexagon';
+import { Hexagon } from './Hexagon';
+
+interface MapProps {
+  children?: any;
+  center: { lat: number, lng: number };
+}
 
 const containerStyle: React.CSSProperties = {
   width: '100%',
   height: '100%'
 };
 
-const polygonOptions: google.maps.PolygonOptions = {
-  fillColor: "red",
-  strokeColor: "navy",
-  strokeWeight: 1
+const resolution = 8;
+
+function h3ToPath(h3Index: string): google.maps.LatLng[] {
+  return h3.h3ToGeoBoundary(h3Index)
+    .map(i => new google.maps.LatLng(i[0], i[1]));
 }
 
-function h3ToPolyline(h3Index: string) {
-  return h3.h3ToGeoBoundary(h3Index).map(i => ({ lat: i[0], lng: i[1] }));
-}
-
-function Hexagons({ hexagons }: any) {
-  const hexs = hexagons as { lat: number, lng: number }[][];
-
-  return <>
-    {hexs.map((hex, i) =>
-      <Polygon key={i} path={hex} options={polygonOptions} />
-    )}
-  </>
-}
-
-function Map({ children, center }: any) {
+function Map({ children, center }: MapProps) {
 
   const mapRef = React.useRef<GoogleMap>(null);
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
+    version: "3"
   })
 
   const [mapOptions, setMapOptions] = useState<google.maps.MapOptions>();
 
   useEffect(() => {
     if (isLoaded) {
+      // mapRef.current?.state.map?.addListener("mousemove", () => {
+      //   console.log("keydown");
+      // })
+
+      if (mapRef.current) {
+        console.log("keydown");
+        google.maps.event.addDomListener(mapRef.current, "keydown", () => {
+        })
+      }
+
       setMapOptions({
         center,
         zoom: 14,
+        gestureHandling: "greedy",
         disableDoubleClickZoom: true,
         zoomControlOptions: { position: google.maps.ControlPosition.LEFT_CENTER, },
         streetViewControlOptions: { position: google.maps.ControlPosition.LEFT_BOTTOM },
@@ -53,31 +59,82 @@ function Map({ children, center }: any) {
     }
   }, [isLoaded, center])
 
-  const [location, setLocation] = useState<google.maps.LatLng | undefined>(center);
+  const [location, setLocation] = useState<{ lat: number, lng: number }>(center);
 
-  const [hexagons, setHexes] = useState<{ lat: number, lng: number }[][]>([]);
+  const [hexagons, setHexagons] = useState<hexagon[]>([]);
 
-  const onCenterChanged = () => {
-    const cntr = mapRef.current?.state.map?.getCenter();
-    setLocation(cntr);
-  }
+  const [pointer, setPointer] = useState<hexagon>();
 
-  const onDblClick = (e: google.maps.MapMouseEvent) => {
+  const onMouseMove = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng)
       return;
 
-    const h3Index = h3.geoToH3(e.latLng?.lat(), e.latLng?.lng(), 7);
+    if ((e.domEvent as KeyboardEvent).ctrlKey) {
+      toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), true);
+    }
+    else if ((e.domEvent as KeyboardEvent).shiftKey) {
+      toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), false);
+    }
 
-    const polyline = h3ToPolyline(h3Index);
+    const h3Index = h3.geoToH3(e.latLng?.lat(), e.latLng?.lng(), resolution);
 
-    setHexes((s) => {
-      console.log(s);
+    if (pointer?.h3Index !== h3Index) {
+      const path = h3ToPath(h3Index);
+      const color = "gray";
 
-      let res = JSON.parse(JSON.stringify(s)) as { lat: number, lng: number }[][];
-      res.push(polyline)
-      return res;
-    });
+      setPointer(new hexagon(h3Index, path, color));
+    }
   }
+
+  const onCenterChanged = () => {
+    const center = mapRef.current?.state.map?.getCenter();
+    if (center) {
+      setLocation({ lat: center.lat(), lng: center.lng() });
+    }
+  }
+
+  const onDblClick = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), true);
+    }
+  }
+
+  const toggleHexagon = (lat: number, lng: number, create: boolean) => {
+    const h3Index = h3.geoToH3(lat, lng, resolution);
+
+    let index = hexagons.findIndex(h => h.h3Index === h3Index);
+
+    if (index === -1 && create) {
+
+      const path = h3ToPath(h3Index);
+      const color = "green";
+
+      const newHexagon = new hexagon(h3Index, path, color);
+
+      setHexagons((prev) => {
+        let res = JSON.parse(JSON.stringify(prev)) as hexagon[];
+        res.push(newHexagon);
+        return res;
+      })
+    }
+
+    if (index !== -1 && !create) {
+      setHexagons((prev) => {
+        const res = JSON.parse(JSON.stringify(prev)) as hexagon[];
+        res.splice(index, 1)
+        return res;
+      });
+    }
+  }
+
+  // const onToggle = (e: any) => {
+  //   let opts: google.maps.MapOptions = {
+  //     draggable: false
+  //     // gestureHandling: "none"
+  //   }
+  //   if (mapOptions)
+  //     console.log(mapRef.current?.state.map?.setOptions(opts));
+  // }
 
   return <>
     {loadError ?
@@ -88,13 +145,29 @@ function Map({ children, center }: any) {
           mapContainerStyle={containerStyle}
           options={mapOptions}
           onCenterChanged={onCenterChanged}
-          onRightClick={onDblClick}
+          onMouseMove={onMouseMove}
+          onDblClick={onDblClick}
+
         >
           {children}
-          <div className="MapPanel">Loction: {JSON.stringify(location)}
+          {/* 
+          <div className="MapPanel">
+            Loction: {JSON.stringify(location)}
+            <button onClick={onToggle} >Edit</button>
+          </div> */}
 
-          </div>
-          <Hexagons hexagons={hexagons} />
+          {hexagons.map(hexagon =>
+            <Hexagon key={hexagon.h3Index}
+              hexagon={hexagon}
+              onMouseMove={onMouseMove}
+              onDblClick={onDblClick} />
+          )}
+
+          {pointer &&
+            <Hexagon hexagon={pointer}
+              onMouseMove={onMouseMove}
+              onDblClick={onDblClick} />}
+
         </GoogleMap>
         :
         <div>Loading the map...</div>
