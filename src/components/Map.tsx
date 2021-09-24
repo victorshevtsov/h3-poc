@@ -59,7 +59,7 @@ function Map({ children, center }: MapProps) {
     }
   }, [isLoaded, center])
 
-  const [location, setLocation] = useState<{ lat: number, lng: number }>(center);
+  const [, setLocation] = useState<{ lat: number, lng: number }>(center);
 
   const [hexagons, setHexagons] = useState<hexagon[]>([]);
 
