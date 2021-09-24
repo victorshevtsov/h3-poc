@@ -10,20 +10,7 @@ const center = {
 };
 
 const h3Index = h3.geoToH3(center.lat, center.lng, 8);
-
-function h3ToPolyline(h3Index: string) {
-  let hexBoundary = h3.h3ToGeoBoundary(h3Index)
-  hexBoundary.push(hexBoundary[0])
-
-  let arr = []
-  for (const i of hexBoundary) {
-    arr.push({ lat: i[0], lng: i[1] })
-  }
-
-  return arr
-}
-
-const polyline = h3ToPolyline(h3Index);
+const polyline = h3.h3ToGeoBoundary(h3Index).map(i => ({ lat: i[0], lng: i[1] }))
 
 const polygonOptions: google.maps.PolygonOptions = {
   fillColor: "red",
@@ -38,11 +25,13 @@ function App() {
       <Map center={center}>
         <Marker position={center} opacity={0.8} />
         <Polygon path={polyline} options={polygonOptions} />
+        <div className="MapPanel">Left Map</div>
       </Map>
-      <Map center={center}>
+      {/* <Map center={center}>
         <Marker position={center} opacity={0.8} />
         <Polygon path={polyline} options={polygonOptions} />
-      </Map>
+        <div style={divStyles}>Right Map</div>
+      </Map> */}
     </div>
   );
 }
