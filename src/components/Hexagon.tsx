@@ -7,7 +7,7 @@ const defaultOptions: google.maps.PolygonOptions = {
   strokeWeight: 1,
 }
 
-export interface HexagonProps {
+interface HexagonProps {
   hexagon: hexagon;
   onMouseMove?: (e: google.maps.MapMouseEvent) => void;
   onDblClick?: (e: google.maps.MapMouseEvent) => void;

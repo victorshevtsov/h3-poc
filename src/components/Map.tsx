@@ -3,11 +3,7 @@ import * as h3 from 'h3-js';
 import React, { useEffect, useState } from 'react';
 import { hexagon } from '../models/hexagon';
 import { Hexagon } from './Hexagon';
-
-interface MapProps {
-  children?: any;
-  center: { lat: number, lng: number };
-}
+import MapInfo, { MapInfoEvent, MapMode } from './MapInfo';
 
 const containerStyle: React.CSSProperties = {
   width: '100%',
@@ -21,49 +17,60 @@ function h3ToPath(h3Index: string): google.maps.LatLng[] {
     .map(i => new google.maps.LatLng(i[0], i[1]));
 }
 
-function Map({ children, center }: MapProps) {
+interface MapProps {
+  center: { lat: number, lng: number };
+  zoom: number;
+  children?: any;
+  onCenterChanged?: (center: { lat: number; lng: number }) => void;
+  onZoomChanged?: (zoom: number) => void;
+}
+
+function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProps) {
 
   const mapRef = React.useRef<GoogleMap>(null);
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string,
-    version: "3"
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY as string
   })
 
   const [mapOptions, setMapOptions] = useState<google.maps.MapOptions>();
 
   useEffect(() => {
     if (isLoaded) {
-      // mapRef.current?.state.map?.addListener("mousemove", () => {
-      //   console.log("keydown");
-      // })
-
-      if (mapRef.current) {
-        console.log("keydown");
-        google.maps.event.addDomListener(mapRef.current, "keydown", () => {
-        })
-      }
-
       setMapOptions({
-        center,
-        zoom: 14,
-        gestureHandling: "greedy",
+        scaleControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        zoomControl: false,
         disableDoubleClickZoom: true,
-        zoomControlOptions: { position: google.maps.ControlPosition.LEFT_CENTER, },
-        streetViewControlOptions: { position: google.maps.ControlPosition.LEFT_BOTTOM },
+        fullscreenControlOptions: { position: google.maps.ControlPosition.BOTTOM_RIGHT },
         styles: [
+          { featureType: "administrative", stylers: [{ "visibility": "off" }] },
           { featureType: "poi", stylers: [{ "visibility": "off" }] },
           { featureType: "transit", stylers: [{ "visibility": "off" }] },
         ]
       })
     }
-  }, [isLoaded, center])
-
-  const [, setLocation] = useState<{ lat: number, lng: number }>(center);
+  }, [isLoaded])
 
   const [hexagons, setHexagons] = useState<hexagon[]>([]);
 
   const [pointer, setPointer] = useState<hexagon>();
+
+  const onModeChange = (e: MapInfoEvent) => {
+    switch (e.mode) {
+      default:
+      case MapMode.View:
+        mapRef.current?.state.map?.setOptions({ gestureHandling: "auto" })
+        break;
+      case MapMode.Draw:
+        mapRef.current?.state.map?.setOptions({ gestureHandling: "none" })
+        break;
+      case MapMode.Erase:
+        mapRef.current?.state.map?.setOptions({ gestureHandling: "none" })
+        break;
+    }
+  }
 
   const onMouseMove = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng)
@@ -86,10 +93,23 @@ function Map({ children, center }: MapProps) {
     }
   }
 
-  const onCenterChanged = () => {
-    const center = mapRef.current?.state.map?.getCenter();
-    if (center) {
-      setLocation({ lat: center.lat(), lng: center.lng() });
+  const onMapZoomChanged = () => {
+    if (mapRef.current) {
+      const zoom = mapRef.current?.state.map?.getZoom()
+      if (zoom && onZoomChanged)
+        onZoomChanged(zoom)
+    }
+  }
+
+  const onMapCenterChanged = () => {
+    let centerLatLng = mapRef.current?.state.map?.getCenter();
+
+    if (centerLatLng) {
+      let newCenter = { lat: centerLatLng.lat(), lng: centerLatLng.lng() }
+
+      if (newCenter.lat != center.lat && newCenter.lng != center.lng && onCenterChanged) {
+        onCenterChanged(newCenter);
+      }
     }
   }
 
@@ -127,34 +147,22 @@ function Map({ children, center }: MapProps) {
     }
   }
 
-  // const onToggle = (e: any) => {
-  //   let opts: google.maps.MapOptions = {
-  //     draggable: false
-  //     // gestureHandling: "none"
-  //   }
-  //   if (mapOptions)
-  //     console.log(mapRef.current?.state.map?.setOptions(opts));
-  // }
-
   return <>
     {loadError ?
       <div>Map cannot be loaded</div>
       :
       isLoaded ?
         <GoogleMap ref={mapRef}
+          center={center}
+          zoom={zoom}
           mapContainerStyle={containerStyle}
           options={mapOptions}
-          onCenterChanged={onCenterChanged}
+          onZoomChanged={onMapZoomChanged}
+          onCenterChanged={onMapCenterChanged}
           onMouseMove={onMouseMove}
           onDblClick={onDblClick}
-
         >
           {children}
-          {/* 
-          <div className="MapPanel">
-            Loction: {JSON.stringify(location)}
-            <button onClick={onToggle} >Edit</button>
-          </div> */}
 
           {hexagons.map(hexagon =>
             <Hexagon key={hexagon.h3Index}
@@ -168,6 +176,10 @@ function Map({ children, center }: MapProps) {
               onMouseMove={onMouseMove}
               onDblClick={onDblClick} />}
 
+          <MapInfo
+            mode={MapMode.View}
+            count={hexagons.length}
+            onModeChange={onModeChange} />
         </GoogleMap>
         :
         <div>Loading the map...</div>
