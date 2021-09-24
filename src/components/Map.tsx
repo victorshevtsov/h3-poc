@@ -107,7 +107,7 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
     if (centerLatLng) {
       let newCenter = { lat: centerLatLng.lat(), lng: centerLatLng.lng() }
 
-      if (newCenter.lat != center.lat && newCenter.lng != center.lng && onCenterChanged) {
+      if (newCenter.lat !== center.lat && newCenter.lng !== center.lng && onCenterChanged) {
         onCenterChanged(newCenter);
       }
     }
