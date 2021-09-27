@@ -4,7 +4,7 @@ import Map from './components/Map';
 
 function App() {
   const [center, setCenter] = useState({ lat: 43.65, lng: -79.38 })
-  const [zoom, setZoom] = useState(12)
+  const [zoom, setZoom] = useState(10)
 
   return (
     <div className="App" >
@@ -12,11 +12,11 @@ function App() {
         center={center}
         onZoomChanged={setZoom}
         onCenterChanged={setCenter} />
-      <Map
+      {/* <Map
         zoom={zoom}
         center={center}
         onZoomChanged={setZoom}
-        onCenterChanged={setCenter} />
+        onCenterChanged={setCenter} /> */}
     </div>
   );
 }

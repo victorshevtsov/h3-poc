@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { hexagon } from '../models/hexagon';
 import { Hexagon } from './Hexagon';
 import MapInfo, { MapInfoEvent, MapMode } from './MapInfo';
+import toronto from "../data/toronto.json";
 
 const containerStyle: React.CSSProperties = {
   width: '100%',
   height: '100%'
 };
 
-const resolution = 8;
+const defaultResolution = 7;
 
 function h3ToPath(h3Index: string): google.maps.LatLng[] {
   return h3.h3ToGeoBoundary(h3Index)
@@ -49,19 +50,32 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
           { featureType: "poi", stylers: [{ "visibility": "off" }] },
           { featureType: "transit", stylers: [{ "visibility": "off" }] },
         ]
-      })
+      });
+
+      const newHexagons: hexagon[] = [];
+      toronto.forEach(h3Index => {
+        newHexagons.push(new hexagon(h3Index, h3ToPath(h3Index), "green"))
+      });
+
+      setHexagons(newHexagons);
     }
   }, [isLoaded])
 
   const [hexagons, setHexagons] = useState<hexagon[]>([]);
 
-  const [pointer, setPointer] = useState<hexagon>();
+  const [pointer, setPointer] = useState<hexagon | null>();
+
+  const [mode, setMode] = useState<MapMode>(MapMode.View)
+
+  const [resolution, setResolution] = useState(defaultResolution);
 
   const onModeChange = (e: MapInfoEvent) => {
+    setMode(e.mode);
     switch (e.mode) {
       default:
       case MapMode.View:
         mapRef.current?.state.map?.setOptions({ gestureHandling: "auto" })
+        setPointer(null);
         break;
       case MapMode.Draw:
         mapRef.current?.state.map?.setOptions({ gestureHandling: "none" })
@@ -72,16 +86,35 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
     }
   }
 
+  const onResolutionChange = (newResolution: number) => {
+
+    const newHexagons: hexagon[] = [];
+    hexagons.forEach(h => {
+      if (newResolution > resolution) {
+        h3.h3ToChildren(h.h3Index, newResolution)
+          .forEach(h3Index => {
+            if (!newHexagons.find(h => h.h3Index === h3Index)) {
+              newHexagons.push(new hexagon(h3Index, h3ToPath(h3Index), "green"));
+            }
+          })
+      } else {
+        const h3Index = h3.h3ToParent(h.h3Index, newResolution);
+        if (!newHexagons.find(h => h.h3Index === h3Index)) {
+          newHexagons.push(new hexagon(h3Index, h3ToPath(h3Index), "green"));
+        }
+      }
+    });
+
+    setResolution(newResolution);
+    setHexagons(newHexagons);
+  }
+
   const onMouseMove = (e: google.maps.MapMouseEvent) => {
-    if (!e.latLng)
+    if (mode === MapMode.View)
       return;
 
-    if ((e.domEvent as KeyboardEvent).ctrlKey) {
-      toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), true);
-    }
-    else if ((e.domEvent as KeyboardEvent).shiftKey) {
-      toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), false);
-    }
+    if (!e.latLng)
+      return;
 
     const h3Index = h3.geoToH3(e.latLng?.lat(), e.latLng?.lng(), resolution);
 
@@ -90,6 +123,15 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
       const color = "gray";
 
       setPointer(new hexagon(h3Index, path, color));
+    }
+
+    if ((e.domEvent as MouseEvent).buttons === 1) {
+
+      if (mode === MapMode.Draw) {
+        toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), true);
+      } else if (mode === MapMode.Erase) {
+        toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), false);
+      }
     }
   }
 
@@ -178,8 +220,10 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
 
           <MapInfo
             mode={MapMode.View}
+            resolution={resolution}
             count={hexagons.length}
-            onModeChange={onModeChange} />
+            onModeChange={onModeChange}
+            onResolutionChange={onResolutionChange} />
         </GoogleMap>
         :
         <div>Loading the map...</div>
