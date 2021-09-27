@@ -10,15 +10,19 @@ const defaultOptions: google.maps.PolygonOptions = {
 interface HexagonProps {
   hexagon: hexagon;
   onMouseMove?: (e: google.maps.MapMouseEvent) => void;
-  onDblClick?: (e: google.maps.MapMouseEvent) => void;
+  onMouseDown?: (e: google.maps.MapMouseEvent) => void;
 }
 
-export const Hexagon = ({ hexagon, onMouseMove, onDblClick }: HexagonProps) => {
+export const Hexagon = ({ hexagon, onMouseMove, onMouseDown }: HexagonProps) => {
 
   const [options, setOptions] = useState(defaultOptions)
 
   useEffect(() => {
-    setOptions(prev => ({ ...prev, fillColor: hexagon?.color }))
+    setOptions(prev => ({
+      ...prev,
+      fillColor: hexagon?.color, fillOpacity: 0.15,
+      strokeColor: hexagon?.color, strokeOpacity: 0.5
+    }))
   }, [hexagon?.color])
 
   return <Polygon
@@ -26,5 +30,5 @@ export const Hexagon = ({ hexagon, onMouseMove, onDblClick }: HexagonProps) => {
     path={hexagon.path}
     options={options}
     onMouseMove={onMouseMove}
-    onDblClick={onDblClick} />
+    onMouseDown={onMouseDown} />
 }

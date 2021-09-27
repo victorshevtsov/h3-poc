@@ -46,7 +46,7 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
         disableDoubleClickZoom: true,
         fullscreenControlOptions: { position: google.maps.ControlPosition.BOTTOM_RIGHT },
         styles: [
-          { featureType: "administrative", stylers: [{ "visibility": "off" }] },
+          // { featureType: "administrative", stylers: [{ "visibility": "off" }] },
           { featureType: "poi", stylers: [{ "visibility": "off" }] },
           { featureType: "transit", stylers: [{ "visibility": "off" }] },
         ]
@@ -119,10 +119,7 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
     const h3Index = h3.geoToH3(e.latLng?.lat(), e.latLng?.lng(), resolution);
 
     if (pointer?.h3Index !== h3Index) {
-      const path = h3ToPath(h3Index);
-      const color = "gray";
-
-      setPointer(new hexagon(h3Index, path, color));
+      setPointer(new hexagon(h3Index, h3ToPath(h3Index), "gray"));
     }
 
     if ((e.domEvent as MouseEvent).buttons === 1) {
@@ -130,6 +127,23 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
       if (mode === MapMode.Draw) {
         toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), true);
       } else if (mode === MapMode.Erase) {
+        toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), false);
+      }
+    }
+  }
+
+  const onMouseDown = (e: google.maps.MapMouseEvent) => {
+    if (mode === MapMode.View)
+      return;
+
+    if (!e.latLng)
+      return;
+
+    if ((e.domEvent as MouseEvent).buttons === 1) {
+      if (mode === MapMode.Draw) {
+        setPointer(null);
+        toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), true);
+      } else {
         toggleHexagon(e.latLng?.lat(), e.latLng?.lng(), false);
       }
     }
@@ -210,13 +224,13 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
             <Hexagon key={hexagon.h3Index}
               hexagon={hexagon}
               onMouseMove={onMouseMove}
-              onDblClick={onDblClick} />
+              onMouseDown={onMouseDown} />
           )}
 
           {pointer &&
             <Hexagon hexagon={pointer}
               onMouseMove={onMouseMove}
-              onDblClick={onDblClick} />}
+              onMouseDown={onMouseDown} />}
 
           <MapInfo
             mode={MapMode.View}
