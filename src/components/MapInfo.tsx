@@ -1,11 +1,10 @@
+import { IconContext } from "react-icons";
+import { CgShapeHexagon } from "react-icons/cg";
+import { FaEraser, FaPaintBrush } from "react-icons/fa";
+import { FiHexagon, FiMove } from "react-icons/fi";
 import styles from "./MapInfo.module.scss";
 
 export enum MapMode { View, Draw, Erase }
-
-// const defaultState = {
-//   mode: MapMode.View,
-//   resolution: 8
-// }
 
 interface MapInfoProps {
   mode: MapMode;
@@ -20,25 +19,25 @@ export interface MapInfoEvent {
 }
 
 const MapInfo = ({ count, resolution, onModeChange, onResolutionChange }: MapInfoProps) => {
-  // const [state, setState] = useState(defaultState);
-
   const swithMode = (mode: MapMode) => {
     if (onModeChange)
       onModeChange({ mode })
   }
 
   return <div className={styles.MapInfo}>
-    <button onClick={() => swithMode(MapMode.View)}>View</button>
-    <button onClick={() => swithMode(MapMode.Draw)}>Draw</button>
-    <button onClick={() => swithMode(MapMode.Erase)}>Erase</button>
-    <button onClick={() => onResolutionChange(++resolution)}>Inc</button>
-    <div>
-      {resolution}
-    </div>
-    <button onClick={() => onResolutionChange(--resolution)}>Dec</button>
-    <div>
-      {count}
-    </div>
+    <IconContext.Provider value={{ color: "gray", className: "global-class-name", size: "1.25em", style: { verticalAlign: "middle" } }}>
+      <button onClick={() => swithMode(MapMode.View)}><FiMove /> View</button>
+      <button onClick={() => swithMode(MapMode.Draw)}><FaPaintBrush /> Draw</button>
+      <button onClick={() => swithMode(MapMode.Erase)}><FaEraser /> Erase</button>
+      <button onClick={() => onResolutionChange(--resolution)}><FiHexagon /> Bigger</button>
+      <button onClick={() => onResolutionChange(++resolution)}><CgShapeHexagon /> Smaller</button>
+      <div>
+        Resolution: {resolution}
+      </div>
+      <div>
+        Polygons: {count}
+      </div>
+    </IconContext.Provider>
   </div>
 }
 
