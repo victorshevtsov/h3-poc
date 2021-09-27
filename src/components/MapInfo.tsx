@@ -1,13 +1,11 @@
-import { resourceUsage } from "process";
-import { useState } from "react";
 import styles from "./MapInfo.module.scss";
 
 export enum MapMode { View, Draw, Erase }
 
-const defaultState = {
-  mode: MapMode.View,
-  resolution: 8
-}
+// const defaultState = {
+//   mode: MapMode.View,
+//   resolution: 8
+// }
 
 interface MapInfoProps {
   mode: MapMode;
@@ -22,7 +20,7 @@ export interface MapInfoEvent {
 }
 
 const MapInfo = ({ count, resolution, onModeChange, onResolutionChange }: MapInfoProps) => {
-  const [state, setState] = useState(defaultState);
+  // const [state, setState] = useState(defaultState);
 
   const swithMode = (mode: MapMode) => {
     if (onModeChange)
