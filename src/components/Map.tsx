@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { hexagon } from '../models/hexagon';
 import { Hexagon } from './Hexagon';
 import MapInfo, { MapInfoEvent, MapMode } from './MapInfo';
-import toronto from "../data/toronto.json";
+//import toronto from "../data/toronto.json";
 
 const containerStyle: React.CSSProperties = {
   width: '100%',
@@ -52,12 +52,12 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
         ]
       });
 
-      const newHexagons: hexagon[] = [];
-      toronto.forEach(h3Index => {
-        newHexagons.push(new hexagon(h3Index, h3ToPath(h3Index), "green"))
-      });
+      // const newHexagons: hexagon[] = [];
+      // toronto.forEach(h3Index => {
+      //   newHexagons.push(new hexagon(h3Index, h3ToPath(h3Index), "green"))
+      // });
 
-      setHexagons(newHexagons);
+      // setHexagons(newHexagons);
     }
   }, [isLoaded])
 
