@@ -1,10 +1,11 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import FileSaver from "file-saver";
 import * as h3 from 'h3-js';
 import React, { useEffect, useState } from 'react';
 import { hexagon } from '../models/hexagon';
 import { Hexagon } from './Hexagon';
 import MapInfo, { MapInfoEvent, MapMode } from './MapInfo';
-//import toronto from "../data/toronto.json";
+// import toronto from "../data/toronto.json";
 
 const containerStyle: React.CSSProperties = {
   width: '100%',
@@ -203,6 +204,13 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
     }
   }
 
+  const onSaveToFile = () => {
+    let data = hexagons.map(h => ({ h3Index: h.h3Index, path: h.path }));
+    let json = JSON.stringify(data, null, 2)
+
+    FileSaver.saveAs(new Blob([json]), "hexagons.json")
+  }
+
   return <>
     {loadError ?
       <div>Map cannot be loaded</div>
@@ -237,7 +245,8 @@ function Map({ center, zoom, children, onCenterChanged, onZoomChanged }: MapProp
             resolution={resolution}
             count={hexagons.length}
             onModeChange={onModeChange}
-            onResolutionChange={onResolutionChange} />
+            onResolutionChange={onResolutionChange}
+            onSaveToFile={onSaveToFile} />
         </GoogleMap>
         :
         <div>Loading the map...</div>

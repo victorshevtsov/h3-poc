@@ -12,13 +12,14 @@ interface MapInfoProps {
   count: number;
   onModeChange?: (e: MapInfoEvent) => void;
   onResolutionChange: (resolution: number) => void;
+  onSaveToFile: () => void;
 }
 
 export interface MapInfoEvent {
   mode: MapMode;
 }
 
-const MapInfo = ({ count, resolution, onModeChange, onResolutionChange }: MapInfoProps) => {
+const MapInfo = ({ count, resolution, onModeChange, onResolutionChange, onSaveToFile }: MapInfoProps) => {
   const swithMode = (mode: MapMode) => {
     if (onModeChange)
       onModeChange({ mode })
@@ -37,6 +38,7 @@ const MapInfo = ({ count, resolution, onModeChange, onResolutionChange }: MapInf
       <div>
         Polygons: {count}
       </div>
+      <button onClick={() => onSaveToFile()}><CgShapeHexagon /> Save</button>
     </IconContext.Provider>
   </div>
 }
